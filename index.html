@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dem Tube - Video Sharing Platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: #030303;
+        }
+        
+        /* Header Styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            height: 56px;
+            background-color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: #ff0000;
+        }
+        
+        .logo i {
+            margin-right: 5px;
+        }
+        
+        .search-container {
+            display: flex;
+            align-items: center;
+            flex: 0 1 728px;
+        }
+        
+        .search-container input {
+            flex: 1;
+            padding: 8px 16px;
+            border: 1px solid #ccc;
+            border-radius: 2px 0 0 2px;
+            max-width: 600px;
+        }
+        
+        .search-container button {
+            padding: 8px 16px;
+            background: #f8f8f8;
+            border: 1px solid #ccc;
+            border-left: none;
+            border-radius: 0 2px 2px 0;
+            cursor: pointer;
+        }
+        
+        .user-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-actions i {
+            margin-left: 24px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        
+        /* Main Content Layout */
+        .container {
+            display: flex;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 240px;
+            background-color: white;
+            padding: 12px 0;
+            overflow-y: auto;
+            height: calc(100vh - 56px);
+            position: sticky;
+            top: 56px;
+        }
+        
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 24px;
+            cursor: pointer;
+        }
+        
+        .sidebar-item:hover {
+            background-color: #f2f2f2;
+        }
+        
+        .sidebar-item.active {
+            background-color: #e5e5e5;
+        }
+        
+        .sidebar-item i {
+            margin-right: 24px;
+            font-size: 18px;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 24px;
+        }
+        
+        .video-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        
+        .video-card {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .video-card:hover {
+            transform: scale(1.03);
+        }
+        
+        .thumbnail {
+            position: relative;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            background-color: #ddd;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .thumbnail img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .video-duration {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 2px;
+            font-size: 12px;
+        }
+        
+        .video-info {
+            display: flex;
+            margin-top: 12px;
+        }
+        
+        .channel-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #999;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .video-details h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+            font-weight: 500;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .video-details p {
+            font-size: 14px;
+            color: #606060;
+            margin-bottom: 2px;
+        }
+        
+        /* Video Player Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            width: 90%;
+            max-width: 1000px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .video-player {
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%;
+            background-color: black;
+            position: relative;
+        }
+        
+        .video-player iframe {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .player-actions {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .close-player {
+            background: #ff0000;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        /* Upload Form */
+        .upload-form {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-top: 24px;
+            display: none;
+        }
+        
+        .upload-form h2 {
+            margin-bottom: 16px;
+            color: #ff0000;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .submit-btn {
+            background: #ff0000;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 72px;
+            }
+            
+            .sidebar-item span {
+                display: none;
+            }
+            
+            .sidebar-item i {
+                margin-right: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+                display: flex;
+                overflow-x: auto;
+                padding: 0;
+            }
+            
+            .sidebar-item {
+                padding: 16px;
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .sidebar-item i {
+                margin-right: 0;
+                margin-bottom: 4px;
+            }
+            
+            .search-container {
+                flex: 1;
+                margin: 0 12px;
+            }
+            
+            .video-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <i class="fas fa-play-circle"></i>
+            <span>Dem Tube</span>
+        </div>
+        
+        <div class="search-container">
+            <input type="text" placeholder="Search">
+            <button><i class="fas fa-search"></i></button>
+        </div>
+        
+        <div class="user-actions">
+            <i class="fas fa-upload" id="upload-btn"></i>
+            <i class="fas fa-bell"></i>
+            <i class="fas fa-user-circle"></i>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-item active">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </div>
+            <div class="sidebar-item">
+                <i class="fas fa-fire"></i>
+                <span>Trending</span>
+            </div>
+            <div class="sidebar-item">
+                <i class="fas fa-folder"></i>
+                <span>Subscriptions</span>
+            </div>
+            <div class="sidebar-item">
+                <i class="fas fa-play-circle"></i>
+                <span>Library</span>
+            </div>
+            <div class="sidebar-item">
+                <i class="fas fa-history"></i>
+                <span>History</span>
+            </div>
+            <div class="sidebar-item">
+                <i class="fas fa-clock"></i>
+                <span>Watch later</span>
+            </div>
+            <div class="sidebar-item">
+                <i class="fas fa-thumbs-up"></i>
+                <span>Liked videos</span>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1>Recommended Videos</h1>
+            
+            <div class="video-container">
+                <!-- Video 1 -->
+                <div class="video-card" data-video-id="dQw4w9WgXcQ">
+                    <div class="thumbnail">
+                        <img src="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg" alt="Video thumbnail">
+                        <div class="video-duration">4:20</div>
+                    </div>
+                    <div class="video-info">
+                        <div class="channel-avatar"></div>
+                        <div class="video-details">
+                            <h3>Never Gonna Give You Up - Rick Astley</h3>
+                            <p>Rick Astley</p>
+                            <p>1.2B views • 5 years ago</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Video 2 -->
+                <div class="video-card" data-video-id="jNQXAC9IVRw">
+                    <div class="thumbnail">
+                        <img src="https://i.ytimg.com/vi/jNQXAC9IVRw/hqdefault.jpg" alt="Video thumbnail">
+                        <div class="video-duration">0:19</div>
+                    </div>
+                    <div class="video-info">
+                        <div class="channel-avatar"></div>
+                        <div class="video-details">
+                            <h3>Me at the zoo - First YouTube Video</h3>
+                            <p>Jawed Karim</p>
+                            <p>245M views • 18 years ago</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Video 3 -->
+                <div class="video-card" data-video-id="9bZkp7q19f0">
+                    <div class="thumbnail">
+                        <img src="https://i.ytimg.com/vi/9bZkp7q19f0/hqdefault.jpg" alt="Video thumbnail">
+                        <div class="video-duration">4:13</div>
+                    </div>
+                    <div class="video-info">
+                        <div class="channel-avatar"></div>
+                        <div class="video-details">
+                            <h3>PSY - GANGNAM STYLE</h3>
+                            <p>PSY</p>
+                            <p>4.5B views • 10 years ago</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Video 4 -->
+                <div class="video-card" data-video-id="OPf0YbXqDm0">
+                    <div class="thumbnail">
+                        <img src="https://i.ytimg.com/vi/OPf0YbXqDm0/hqdefault.jpg" alt="Video thumbnail">
+                        <div class="video-duration">3:32</div>
+                    </div>
+                    <div class="video-info">
+                        <div class="channel-avatar"></div>
+                        <div class="video-details">
+                            <h3>Mark Ronson - Uptown Funk ft. Bruno Mars</h3>
+                            <p>Mark Ronson</p>
+                            <p>5.2B views • 8 years ago</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Video 5 -->
+                <div class="video-card" data-video-id="kJQP7kiw5Fk">
+                    <div class="thumbnail">
+                        <img src="https://i.ytimg.com/vi/kJQP7kiw5Fk/hqdefault.jpg" alt="Video thumbnail">
+                        <div class="video-duration">4:16</div>
+                    </div>
+                    <div class="video-info">
+                        <div class="channel-avatar"></div>
+                        <div class="video-details">
+                            <h3>Luis Fonsi - Despacito ft. Daddy Yankee</h3>
+                            <p>Luis Fonsi</p>
+                            <p>8.1B views • 6 years ago</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Video 6 -->
+                <div class="video-card" data-video-id="RgKAFK5djSk">
+                    <div class="thumbnail">
+                        <img src="https://i.ytimg.com/vi/RgKAFK5djSk/hqdefault.jpg" alt="Video thumbnail">
+                        <div class="video-duration">3:52</div>
+                    </div>
+                    <div class="video-info">
+                        <div class="channel-avatar"></div>
+                        <div class="video-details">
+                            <h3>Wiz Khalifa - See You Again ft. Charlie Puth</h3>
+                            <p>Wiz Khalifa</p>
+                            <p>6.4B views • 7 years ago</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Upload Form -->
+            <div class="upload-form" id="upload-form">
+                <h2>Upload Your Video</h2>
+                <div class="form-group">
+                    <label for="video-title">Video Title</label>
+                    <input type="text" id="video-title" placeholder="Enter title for your video">
+                </div>
+                <div class="form-group">
+                    <label for="video-desc">Description</label>
+                    <textarea id="video-desc" placeholder="Describe your video"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="video-file">Select Video File</label>
+                    <input type="file" id="video-file" accept="video/*">
+                </div>
+                <button class="submit-btn">Upload Video</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Video Player Modal -->
+    <div class="modal" id="video-modal">
+        <div class="modal-content">
+            <div class="video-player" id="player"></div>
+            <div class="player-actions">
+                <h3 id="video-title"></h3>
+                <button class="close-player" id="close-player">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const videoCards = document.querySelectorAll('.video-card');
+        const videoModal = document.getElementById('video-modal');
+        const playerDiv = document.getElementById('player');
+        const closePlayerBtn = document.getElementById('close-player');
+        const uploadBtn = document.getElementById('upload-btn');
+        const uploadForm = document.getElementById('upload-form');
+        
+        // Open video when a video card is clicked
+        videoCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const videoId = card.getAttribute('data-video-id');
+                const videoTitle = card.querySelector('h3').textContent;
+                
+                // Set up YouTube iframe player
+                playerDiv.innerHTML = `
+                    <iframe 
+                        src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
+                `;
+                
+                // Set video title
+                document.getElementById('video-title').textContent = videoTitle;
+                
+                // Show the modal
+                videoModal.style.display = 'flex';
+            });
+        });
+        
+        // Close video player
+        closePlayerBtn.addEventListener('click', () => {
+            videoModal.style.display = 'none';
+            playerDiv.innerHTML = ''; // Stop the video
+        });
+        
+        // Toggle upload form
+        uploadBtn.addEventListener('click', () => {
+            if (uploadForm.style.display === 'block') {
+                uploadForm.style.display = 'none';
+            } else {
+                uploadForm.style.display = 'block';
+                // Scroll to the form
+                uploadForm.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === videoModal) {
+                videoModal.style.display = 'none';
+                playerDiv.innerHTML = ''; // Stop the video
+            }
+        });
+    </script>
+</body>
+</html>
